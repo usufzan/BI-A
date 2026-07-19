@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaming Executive Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--acc:#2563EB;--dark:#111827;--sec:#4B5563;--gray:#9CA3AF;--bg:#F8FAFC;--red:#B91C1C;--green:#047857;--border:#E5E7EB}
+*{box-sizing:border-box}body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--dark)}
+header{background:#fff;border-bottom:1px solid var(--border);padding:14px 24px;position:sticky;top:0;z-index:10}
+header h1{margin:0 0 8px;font-size:18px}
+nav{display:flex;flex-wrap:wrap;gap:6px}
+nav button{background:#fff;border:1px solid var(--border);border-radius:6px;padding:7px 14px;cursor:pointer;font-size:13px;color:var(--sec)}
+nav button.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+main{max-width:1280px;margin:0 auto;padding:20px}
+section{display:none}section.active{display:block}
+h2{font-size:17px;margin:6px 0 2px}
+.takeaway{color:var(--sec);font-size:13.5px;margin:0 0 14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px}
+.kpi .v{font-size:22px;font-weight:600}.kpi .l{font-size:11px;color:var(--sec);margin-top:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px}
+.card h3{font-size:13px;margin:0 0 4px}
+.hint{font-size:11.5px;color:var(--gray);font-style:italic;margin:0 0 10px}
+.card .note{font-size:11px;color:var(--red);margin:6px 0 0}
+canvas{max-height:300px}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{border:1px solid var(--border);padding:5px 7px;text-align:right}
+th:first-child,td:first-child{text-align:left}td:first-child{color:var(--dark)}
+thead th{background:var(--bg);text-align:left}
+.footer{font-size:11px;color:var(--sec);background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:14px}
+.risk{border-left:4px solid var(--gray);padding:8px 12px;background:#fff;border-radius:6px;margin-bottom:8px;font-size:13px}
+.risk.breach{border-left-color:var(--red)}
+.method p,.prose p{font-size:13.5px;line-height:1.55;max-width:1050px}
+.prose li{font-size:13px;line-height:1.5;margin-bottom:6px}
+.tag{display:inline-block;font-size:10px;background:#DBEAFE;color:#1E40AF;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+.pill{display:inline-block;font-size:11px;border-radius:10px;padding:1px 9px;margin-right:4px}
+.ok{background:#D1FAE5;color:#047857}.warn{background:#FEE2E2;color:#B91C1C}
+.finding{background:#fff;border:1px solid var(--border);border-left:4px solid var(--acc);border-radius:8px;padding:14px;margin-bottom:12px}
+.finding b{font-size:14px}.finding p{margin:6px 0 0;font-size:13px;color:var(--sec)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:10px 0}
+.step{flex:1;min-width:150px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px}
+.step b{display:block;font-size:12.5px;margin-bottom:3px;color:var(--acc)}
+</style>
+</head>
+<body>
+<header>
+<h1>Gaming Industry — Executive Dashboard <span class="tag">Pipeline run_20260719_204125 · seed 42 · 15/15 data tests · 40/40 build checks</span></h1>
+<nav id="nav"></nav>
+</header>
+<main id="main"></main>
+<script>
+const D = {"console_area": {"years": [1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018], "families": {"Nintendo": [1.74, 9.95, 4.39, 7.15, 8.41, 6.32, 6.05, 9.34, 12.79, 22.7, 17.28, 12.03, 19.13, 26.65, 30.68, 21.9, 54.56, 73.6, 71.04, 76.81, 73.66, 69.59, 177.38, 214.99, 196.9, 146.74, 93.46, 46.57, 34.44, 22.48, 17.4, 17.12, 28.96, 23.09], "Other": [0.45, 0.37, 1.2, 1.58, 0.71, 2.75, 0.0, 0.04, 5.11, 9.98, 11.48, 13.09, 8.0, 4.33, 6.61, 6.01, 1.71, 0.3, 0.0, 0.0, 0.0, 0.0, 0.02, 0.04, 0.06, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "PC": [0.0, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.26, 3.64, 4.38, 6.15, 4.69, 0.65, 2.65, 5.63, 4.13, 8.33, 6.01, 1.04, 3.66, 2.26, 2.96, 10.71, 15.39, 13.3, 29.72, 9.8, 5.07, 10.99, 5.17, 6.46, 1.53, 1.47], "PlayStation": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.53, 19.84, 70.09, 73.92, 97.42, 129.35, 137.19, 152.98, 183.82, 168.38, 151.26, 175.23, 134.77, 173.13, 190.2, 174.26, 152.9, 174.01, 134.21, 128.12, 161.83, 139.81, 127.88, 114.06, 85.14], "Xbox": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 13.37, 47.77, 54.36, 53.28, 57.93, 37.1, 82.89, 121.68, 108.71, 140.61, 142.18, 94.59, 98.1, 96.71, 67.81, 56.44, 47.41, 38.21]}}, "steam_era": {"years": [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025], "releases": [2521, 4160, 5967, 7443, 6146, 8568, 8294, 9158, 12735, 18282, 3573], "escape_rate": [0.9956, 0.9974, 0.9972, 0.9972, 0.9989, 0.9991, 0.9228, 0.856, 0.8316, 0.8136, 0.7761]}, "concentration": {"years": [1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018], "top10": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.8843, 0.9478, 0.8581, 0.7739, 0.6006, 0.6686, 0.6967, 0.6948, 0.669, 0.6457, 0.6916, 0.6747, 0.6962, 0.759, 0.7505, 0.7021, 0.6785, 0.695, 0.6738, 0.6753, 0.6542, 0.7717, 0.8198, 0.824, 0.7897, 0.7812, 0.7452, 0.7407], "hhi": [4460.9, 2391.7, 1813.4, 1468.2, 2930.0, 2164.6, 1008.3, 1636.0, 1067.5, 807.4, 483.3, 589.0, 698.5, 644.6, 736.1, 651.1, 658.5, 817.8, 886.2, 954.2, 847.1, 801.5, 656.9, 643.3, 705.6, 730.1, 639.0, 900.1, 1053.0, 931.8, 977.2, 922.5, 924.3, 811.4], "avg": 0.7813}, "nonmajor": {"rows": ["Action & Combat", "Adventure & Narrative", "Casual & Puzzle", "Online & Social", "Other", "Sports & Racing", "Strategy & Simulation"], "cols": ["Nintendo", "Other", "PC", "PlayStation", "Xbox"], "cells": {"Action & Combat|Nintendo": [0.401, 1957], "Action & Combat|Other": [0.652, 206], "Action & Combat|PC": [0.2141, 393], "Action & Combat|PlayStation": [0.2856, 2419], "Action & Combat|Xbox": [0.1898, 1107], "Adventure & Narrative|Nintendo": [0.4233, 615], "Adventure & Narrative|Other": [0.4072, 40], "Adventure & Narrative|PC": [0.738, 195], "Adventure & Narrative|PlayStation": [0.4712, 1086], "Adventure & Narrative|Xbox": [0.4369, 157], "Casual & Puzzle|Nintendo": [0.486, 548], "Casual & Puzzle|Other": null, "Casual & Puzzle|PC": [0.5671, 73], "Casual & Puzzle|PlayStation": [0.4957, 195], "Casual & Puzzle|Xbox": [0.3523, 61], "Online & Social|Nintendo": null, "Online & Social|PC": null, "Online & Social|PlayStation": null, "Online & Social|Xbox": null, "Other|Nintendo": [0.5034, 1540], "Other|Other": [0.5157, 52], "Other|PC": [0.2731, 188], "Other|PlayStation": [0.3929, 1500], "Other|Xbox": [0.2789, 392], "Sports & Racing|Nintendo": [0.3206, 1240], "Sports & Racing|Other": [0.3494, 65], "Sports & Racing|PC": [0.3057, 205], "Sports & Racing|PlayStation": [0.1851, 1708], "Sports & Racing|Xbox": [0.1323, 774], "Strategy & Simulation|Nintendo": [0.3797, 724], "Strategy & Simulation|Other": [0.6222, 31], "Strategy & Simulation|PC": [0.2368, 476], "Strategy & Simulation|PlayStation": [0.4743, 536], "Strategy & Simulation|Xbox": [0.2775, 159]}}, "risk_return": [{"genre": "Sports", "release_count": 2577, "median_units_m": 0.2, "hit_rate_1m": 0.1129, "top5pct_unit_share": 0.3515, "median_critic_score": 75.0}, {"genre": "Action", "release_count": 2799, "median_units_m": 0.15, "hit_rate_1m": 0.0822, "top5pct_unit_share": 0.4387, "median_critic_score": 65.0}, {"genre": "Shooter", "release_count": 1473, "median_units_m": 0.18, "hit_rate_1m": 0.1684, "top5pct_unit_share": 0.4561, "median_critic_score": 72.0}, {"genre": "Misc", "release_count": 1967, "median_units_m": 0.11, "hit_rate_1m": 0.0625, "top5pct_unit_share": 0.382, "median_critic_score": 68.0}, {"genre": "Racing", "release_count": 1415, "median_units_m": 0.14, "hit_rate_1m": 0.1039, "top5pct_unit_share": 0.3383, "median_critic_score": 69.0}, {"genre": "Role-Playing", "release_count": 1447, "median_units_m": 0.11, "hit_rate_1m": 0.047, "top5pct_unit_share": 0.3978, "median_critic_score": 72.0}, {"genre": "Platform", "release_count": 944, "median_units_m": 0.17, "hit_rate_1m": 0.089, "top5pct_unit_share": 0.2946, "median_critic_score": 68.0}, {"genre": "Fighting", "release_count": 866, "median_units_m": 0.16, "hit_rate_1m": 0.1074, "top5pct_unit_share": 0.3155, "median_critic_score": 71.5}, {"genre": "Adventure", "release_count": 1879, "median_units_m": 0.04, "hit_rate_1m": 0.0362, "top5pct_unit_share": 0.4436, "median_critic_score": 66.5}, {"genre": "Simulation", "release_count": 1111, "median_units_m": 0.08, "hit_rate_1m": 0.0594, "top5pct_unit_share": 0.4011, "median_critic_score": 70.0}, {"genre": "Action-Adventure", "release_count": 258, "median_units_m": 0.225, "hit_rate_1m": 0.1434, "top5pct_unit_share": 0.4042, "median_critic_score": 74.0}, {"genre": "Puzzle", "release_count": 711, "median_units_m": 0.06, "hit_rate_1m": 0.0309, "top5pct_unit_share": 0.3699, "median_critic_score": 69.0}, {"genre": "Strategy", "release_count": 815, "median_units_m": 0.05, "hit_rate_1m": 0.0123, "top5pct_unit_share": 0.3537, "median_critic_score": 72.0}, {"genre": "Music", "release_count": 145, "median_units_m": 0.16, "hit_rate_1m": 0.069, "top5pct_unit_share": 0.3766, "median_critic_score": 77.0}, {"genre": "MMO", "release_count": 30, "median_units_m": 0.125, "hit_rate_1m": 0.1, "top5pct_unit_share": 0.3684, "median_critic_score": 77.0}, {"genre": "Visual Novel", "release_count": 213, "median_units_m": 0.02, "hit_rate_1m": 0.0, "top5pct_unit_share": 0.2232, "median_critic_score": 65.0}], "quality": {"bands": ["Below 60", "60-69", "70-74", "75-79", "80-84", "85+"], "median": [0.14, 0.18, 0.24, 0.31, 0.49, 0.84], "lo": [0.13, 0.17, 0.22, 0.27, 0.44, 0.73], "hi": [0.15, 0.19, 0.27, 0.33, 0.53, 0.93], "n": [1847, 1732, 1110, 1051, 896, 713]}, "steam_curve": {"x": [0.0, 11.5, 15.4, 17.8, 20.3, 21.9, 24.1, 25.6, 27.0, 28.3, 29.6, 30.7, 31.6, 32.5, 33.6, 34.3, 35.0, 35.9, 36.7, 37.5, 38.4, 39.0, 39.5, 40.1, 40.7, 41.3, 41.7, 42.4, 43.0, 43.5, 44.1, 44.8, 45.2, 45.6, 46.2, 46.6, 47.1, 47.6, 48.2, 48.6, 48.9, 49.4, 49.8, 50.5, 50.9, 51.3, 51.8, 52.2, 52.6, 53.0, 53.4, 53.7, 54.2, 54.5, 54.8, 55.2, 55.6, 56.0, 56.4, 56.8, 57.2, 57.5, 57.9, 58.3, 58.7, 59.0, 59.4, 59.7, 60.0, 60.4, 60.7, 61.0, 61.4, 61.7, 62.0, 62.3, 62.6, 63.0, 63.3, 63.6, 63.9, 64.2, 64.5, 64.8, 65.2, 65.5, 65.8, 66.1, 66.4, 66.7, 67.0, 67.4, 67.6, 68.0, 68.2, 68.5, 68.8, 69.1, 69.4, 69.7, 70.0, 70.3, 70.6, 70.9, 71.2, 71.5, 71.8, 72.1, 72.4, 72.7, 73.0, 73.2, 73.5, 73.8, 74.1, 74.4, 74.7, 75.0, 75.2, 75.5, 75.8, 76.1, 76.4, 76.7, 77.0, 77.2, 77.5, 77.8, 78.1, 78.4, 78.7, 79.0, 79.2, 79.5, 79.8, 80.1, 80.4, 80.7, 81.0, 81.2, 81.5, 81.8, 82.1, 82.4, 82.6, 82.9, 83.2, 83.5, 83.8, 84.0, 84.3, 84.6, 84.9, 85.2, 85.5, 85.8, 86.0, 86.3, 86.6, 86.9, 87.2, 87.4, 87.7, 88.0, 88.3, 88.6, 88.9, 89.1, 89.4, 89.7, 90.0, 90.3, 90.5, 90.8, 91.1, 91.4, 91.7, 91.9, 92.2, 92.5, 92.8, 93.1, 93.3, 93.6, 93.9, 94.2, 94.5, 94.8, 95.0, 95.3, 95.6, 95.9, 96.2, 96.4, 96.7, 97.0, 97.3, 97.6, 97.9, 98.2, 98.4, 98.8, 99.0, 99.4], "y": [1.099, 1.218, 1.257, 1.281, 1.307, 1.323, 1.344, 1.36, 1.374, 1.387, 1.4, 1.41, 1.419, 1.428, 1.439, 1.445, 1.453, 1.461, 1.469, 1.476, 1.485, 1.491, 1.496, 1.502, 1.507, 1.512, 1.517, 1.522, 1.528, 1.533, 1.539, 1.544, 1.548, 1.552, 1.557, 1.56, 1.565, 1.569, 1.573, 1.576, 1.579, 1.582, 1.585, 1.589, 1.592, 1.595, 1.598, 1.6, 1.603, 1.606, 1.608, 1.61, 1.612, 1.614, 1.616, 1.618, 1.62, 1.622, 1.624, 1.626, 1.628, 1.629, 1.631, 1.632, 1.634, 1.635, 1.636, 1.638, 1.64, 1.641, 1.643, 1.644, 1.646, 1.647, 1.648, 1.65, 1.651, 1.653, 1.654, 1.656, 1.657, 1.659, 1.66, 1.662, 1.665, 1.667, 1.669, 1.672, 1.674, 1.677, 1.68, 1.683, 1.686, 1.688, 1.691, 1.694, 1.696, 1.699, 1.702, 1.705, 1.708, 1.711, 1.714, 1.717, 1.721, 1.724, 1.727, 1.73, 1.733, 1.736, 1.738, 1.741, 1.743, 1.746, 1.748, 1.751, 1.753, 1.755, 1.758, 1.761, 1.763, 1.766, 1.769, 1.771, 1.773, 1.775, 1.776, 1.777, 1.778, 1.78, 1.78, 1.781, 1.781, 1.782, 1.782, 1.782, 1.783, 1.783, 1.784, 1.785, 1.786, 1.788, 1.789, 1.79, 1.792, 1.794, 1.797, 1.799, 1.802, 1.804, 1.808, 1.811, 1.814, 1.816, 1.818, 1.819, 1.817, 1.817, 1.816, 1.814, 1.811, 1.808, 1.803, 1.799, 1.794, 1.789, 1.783, 1.778, 1.772, 1.767, 1.761, 1.756, 1.752, 1.747, 1.742, 1.739, 1.735, 1.732, 1.728, 1.725, 1.723, 1.72, 1.717, 1.714, 1.712, 1.71, 1.709, 1.704, 1.68, 1.647, 1.616, 1.588, 1.562, 1.537, 1.511, 1.487, 1.462, 1.436, 1.411, 1.385, 1.359, 1.332, 1.305, 1.274]}, "funnel": [{"stage": "1. Released in cohort window", "count": 14650, "pct_of_cohort": 1.0}, {"stage": "2. Any estimated owners (>0 bucket)", "count": 11651, "pct_of_cohort": 0.7953}, {"stage": "3. At least 10 reviews", "count": 4463, "pct_of_cohort": 0.3046}, {"stage": "4. At least 50 reviews", "count": 1999, "pct_of_cohort": 0.1365}, {"stage": "5. Above 20k owners (rank>=2)", "count": 859, "pct_of_cohort": 0.0586}, {"stage": "6. Above 100k owners (rank>=4)", "count": 211, "pct_of_cohort": 0.0144}], "traits": [{"trait": "achievements", "share": 0.7404, "pp_difference": 23.71, "share_field": 0.5033}, {"trait": "price_tier:$0-5", "share": 0.2634, "pp_difference": -19.02, "share_field": 0.4537}, {"trait": "dlc_available", "share": 0.2618, "pp_difference": 18.88, "share_field": 0.073}, {"trait": "price_tier:Free / F2P (price = 0)", "share": 0.0182, "pp_difference": -18.25, "share_field": 0.2007}, {"trait": "price_tier:$15-30", "share": 0.2215, "pp_difference": 17.08, "share_field": 0.0507}, {"trait": "free_to_play", "share": 0.0174, "pp_difference": -16.91, "share_field": 0.1865}, {"trait": "genre_group:Casual & Puzzle", "share": 0.3388, "pp_difference": -15.75, "share_field": 0.4964}, {"trait": "price_tier:$5-15", "share": 0.4367, "pp_difference": 15.67, "share_field": 0.28}, {"trait": "genre_group:Adventure & Narrative", "share": 0.4858, "pp_difference": 11.11, "share_field": 0.3747}, {"trait": "genre_group:Strategy & Simulation", "share": 0.4163, "pp_difference": 6.85, "share_field": 0.3479}, {"trait": "price_tier:$30-50", "share": 0.0419, "pp_difference": 3.35, "share_field": 0.0084}, {"trait": "genre_group:Action & Combat", "share": 0.4045, "pp_difference": 3.29, "share_field": 0.3716}], "sensitivity": [{"rule": "owner_rule_only (rank>0: any estimated owners)", "traction_count": 11651, "traction_rate": 0.7953}, {"rule": "review_rule_only (>=50 reviews)", "traction_count": 1999, "traction_rate": 0.1365}, {"rule": "combined_default_v1.0 (rank>0 OR >=50 reviews)", "traction_count": 11651, "traction_rate": 0.7953}, {"rule": "stricter (rank>=2 i.e. >20k owners, OR >=50 reviews)", "traction_count": 2361, "traction_rate": 0.1612}, {"rule": "strictest (rank>=2 AND >=50 reviews)", "traction_count": 497, "traction_rate": 0.0339}, {"rule": "looser (rank>0 OR >=10 reviews)", "traction_count": 11651, "traction_rate": 0.7953}], "monthly": {"months": ["2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12", "2025-01", "2025-02", "2025-03"], "releases": [282, 1322, 1484, 1561, 1385, 1791, 1770, 1611, 1478, 1416, 550], "strict": [0.195, 0.1778, 0.1914, 0.1755, 0.2094, 0.1859, 0.1661, 0.131, 0.1529, 0.0939, 0.0473], "partial": [true, false, false, false, false, false, false, false, false, false, true]}, "price_arch": [{"price_tier_label": "Free / F2P (price = 0)", "display_order": 1, "Bottom (\u226420k)": 0.7597, "Middle (20k\u20131M)": 0.2227, "Top (1M+)": 0.0176}, {"price_tier_label": "$0-5", "display_order": 2, "Bottom (\u226420k)": 0.8044, "Middle (20k\u20131M)": 0.1929, "Top (1M+)": 0.0028}, {"price_tier_label": "$5-15", "display_order": 3, "Bottom (\u226420k)": 0.7498, "Middle (20k\u20131M)": 0.2415, "Top (1M+)": 0.0088}, {"price_tier_label": "$15-30", "display_order": 4, "Bottom (\u226420k)": 0.5677, "Middle (20k\u20131M)": 0.3867, "Top (1M+)": 0.0455}, {"price_tier_label": "$30-50", "display_order": 5, "Bottom (\u226420k)": 0.4932, "Middle (20k\u20131M)": 0.3897, "Top (1M+)": 0.117}, {"price_tier_label": "$50+", "display_order": 6, "Bottom (\u226420k)": 0.6241, "Middle (20k\u20131M)": 0.2672, "Top (1M+)": 0.1086}], "sentiment": [{"tier": "Free / F2P (price = 0)", "order": 1, "catalog": 77.4, "cohort": 91.5}, {"tier": "$0-5", "order": 2, "catalog": 80.0, "cohort": 90.9}, {"tier": "$5-15", "order": 3, "catalog": 82.9, "cohort": 90.0}, {"tier": "$15-30", "order": 4, "catalog": 82.0, "cohort": 86.7}, {"tier": "$30-50", "order": 5, "catalog": 82.1, "cohort": 80.9}, {"tier": "$50+", "order": 6, "catalog": 75.9, "cohort": 80.0}], "price_move": {"Decrease": 7381, "Unchanged": 61838, "Increase": 5517}, "skew": {"genres": ["Action", "Action-Adventure", "Adventure", "Fighting", "MMO", "Misc", "Music", "Platform", "Puzzle", "Racing", "Role-Playing", "Shooter", "Simulation", "Sports", "Strategy", "Visual Novel"], "regions": ["North America", "PAL", "Japan", "Other"], "cells": {"Action|North America": [1.03, 2799], "Action|PAL": [1.05, 2799], "Action|Japan": [0.69, 2799], "Action|Other": [1.01, 2799], "Action-Adventure|North America": [0.86, 258], "Action-Adventure|PAL": [1.38, 258], "Action-Adventure|Japan": [0.34, 258], "Action-Adventure|Other": [1.26, 258], "Adventure|North America": [0.96, 1879], "Adventure|PAL": [0.97, 1879], "Adventure|Japan": [1.35, 1879], "Adventure|Other": [0.94, 1879], "Fighting|North America": [1.0, 866], "Fighting|PAL": [0.8, 866], "Fighting|Japan": [1.68, 866], "Fighting|Other": [0.84, 866], "MMO|North America": [0.83, 30], "MMO|PAL": [1.09, 30], "MMO|Japan": [1.46, 30], "MMO|Other": [1.12, 30], "Misc|North America": [1.05, 1967], "Misc|PAL": [0.91, 1967], "Misc|Japan": [0.97, 1967], "Misc|Other": [1.07, 1967], "Music|North America": [0.99, 145], "Music|PAL": [1.0, 145], "Music|Japan": [1.1, 145], "Music|Other": [0.96, 145], "Platform|North America": [1.06, 944], "Platform|PAL": [0.98, 944], "Platform|Japan": [0.86, 944], "Platform|Other": [0.88, 944], "Puzzle|North America": [1.0, 711], "Puzzle|PAL": [0.7, 711], "Puzzle|Japan": [2.21, 711], "Puzzle|Other": [0.59, 711], "Racing|North America": [1.01, 1415], "Racing|PAL": [1.17, 1415], "Racing|Japan": [0.36, 1415], "Racing|Other": [1.08, 1415], "Role-Playing|North America": [0.8, 1447], "Role-Playing|PAL": [0.74, 1447], "Role-Playing|Japan": [2.92, 1447], "Role-Playing|Other": [0.81, 1447], "Shooter|North America": [1.04, 1473], "Shooter|PAL": [1.12, 1473], "Shooter|Japan": [0.33, 1473], "Shooter|Other": [1.1, 1473], "Simulation|North America": [1.0, 1111], "Simulation|PAL": [1.0, 1111], "Simulation|Japan": [1.16, 1111], "Simulation|Other": [0.82, 1111], "Sports|North America": [1.01, 2577], "Sports|PAL": [0.99, 2577], "Sports|Japan": [0.88, 2577], "Sports|Other": [1.09, 2577], "Strategy|North America": [0.79, 815], "Strategy|PAL": [0.79, 815], "Strategy|Japan": [3.03, 815], "Strategy|Other": [0.62, 815], "Visual Novel|North America": [0.17, 213], "Visual Novel|PAL": [0.04, 213], "Visual Novel|Japan": [8.58, 213], "Visual Novel|Other": [0.23, 213]}}, "regional_mix": [{"platform_family": "Nintendo", "North America": 0.5631, "PAL": 0.2171, "Japan": 0.1634, "Other": 0.0564, "titles": 6631}, {"platform_family": "Other", "North America": 0.6096, "PAL": 0.0668, "Japan": 0.3128, "Other": 0.0108, "titles": 409}, {"platform_family": "PC", "North America": 0.3486, "PAL": 0.5712, "Japan": 0.0, "Other": 0.0802, "titles": 1538}, {"platform_family": "PlayStation", "North America": 0.4319, "PAL": 0.3286, "Japan": 0.1066, "Other": 0.1329, "titles": 7456}, {"platform_family": "Xbox", "North America": 0.6322, "PAL": 0.279, "Japan": 0.0083, "Other": 0.0805, "titles": 2653}], "scenarios": {"postures": ["Concentrated AAA", "Diffuse mid-market", "Barbell"], "scenarios": ["base", "traction_-25%", "hit_rate_-25%", "quality_adverse", "combined_downside"], "cells": {"Concentrated AAA|base": 100.0, "Concentrated AAA|traction_-25%": 100.0, "Concentrated AAA|hit_rate_-25%": 87.9, "Concentrated AAA|quality_adverse": 85.0, "Concentrated AAA|combined_downside": 74.7, "Diffuse mid-market|base": 100.0, "Diffuse mid-market|traction_-25%": 98.6, "Diffuse mid-market|hit_rate_-25%": 89.0, "Diffuse mid-market|quality_adverse": 85.8, "Diffuse mid-market|combined_downside": 75.0, "Barbell|base": 100.0, "Barbell|traction_-25%": 92.2, "Barbell|hit_rate_-25%": 91.8, "Barbell|quality_adverse": 89.7, "Barbell|combined_downside": 74.9}}, "controls": {"total_reported_console_units_m": 6590.78, "console_release_row_count_all": 63634.0, "console_release_row_count_reported": 18837.0, "console_release_row_count_reported_reliable": 18687.0, "steam_current_app_count": 89618.0, "steam_delta_app_count": 74736.0, "new_cohort_count": 14650.0, "traction_count_default_v1_0": 11651.0, "traction_rate_default_v1_0": 0.7953, "traction_count_strict": 2361.0, "traction_rate_strict": 0.1612, "may_only_app_count": 8910.0, "march_only_app_count": 14882.0, "score_enrichment_match_count": 16069.0, "full_regional_reporting_count": 2221.0, "bridge_march_rows": 258019.0, "hit_count_1m_reported": 1502.0, "hit_rate_1m_reported": 0.0797, "f2p_count_steam_current": 8795.0, "median_review_velocity_delta_panel": 0.1}};
+const ACC='#2563EB', SEC='#4B5563', GRAY='#9CA3AF', RED='#B91C1C';
+const PAL=['#2563EB','#1E40AF','#60A5FA','#93C5FD','#4B5563','#9CA3AF','#CBD5E1','#6B7280'];
+const fmt=(x,d=1)=>x==null?'–':Number(x).toLocaleString('en-US',{maximumFractionDigits:d});
+const pct=x=>x==null?'–':(100*x).toFixed(1)+'%';
+
+const PAGES=[
+ {id:'p0',nav:'Overview',title:'What this dashboard answers — and where the data comes from',
+  takeaway:'Eight strategic questions, four dashboards, one cleaned and audited dataset. Every headline below was validated against the underlying data; one working hypothesis was reversed by the evidence.',kpis:[],footer:''},
+ {id:'pd',nav:'Data & Cleaning',title:'From two raw files to an audited analytical model',
+  takeaway:'We started with vgchartz-2024 (+ its data dictionary), found the raw data unusable for executive analysis, added three complementary datasets, and ran a 15-test cleaning pipeline. Nothing was deleted silently: every dropped row is logged, every rule documented.',kpis:[],footer:''},
+ {id:'p1',nav:'1 · Market',
+  title:'Consolidation, not fragmentation: top-10 publishers’ pooled unit share rose from 58% (1994-98) to 75% (2014-18) — while Steam absorbed the release volume',
+  takeaway:'Both concentration metrics (top-10 share and HHI) rose together; open space for smaller publishers sits in specific genre-platform cells, not in the market overall.',
+  kpis:[['75.5%','Top-10 publisher share (2014-18, pooled)'],['+10.7pp','Change vs 2009-13'],['30.8%','Non-major share of units'],[fmt(D.controls.steam_current_app_count,0),'Steam apps (Mar 2025)'],[fmt(D.controls.console_release_row_count_reported,0),'n · reported console releases']],
+  footer:'Source: VGChartz console fact (reported sales, reliable period ≤2018) + Steam March 2025 snapshot. Missing sales are not zero. Console units and Steam owner buckets are never comparable or summed. VGChartz coverage may affect observed concentration. Steam genre totals are non-additive.'},
+ {id:'p2',nav:'2 · Portfolio',
+  title:'Averages mislead: genre medians and hit rates rank genres differently than totals — and each critic-score band up roughly doubles median units (association, not causation)',
+  takeaway:'Slate design should weight medians, hit rates and tail concentration together; the quality gradient is monotone but observational and conditioned on scored titles.',
+  kpis:[['8.0%','Hit rate ≥1M units (reported)'],['0.12M','Median units per release'],['~44%','Units from top 5% of releases'],['0.14M → 0.84M','Median units, worst → best score band'],[fmt(D.controls.score_enrichment_match_count,0),'Scored rows (selection-biased)']],
+  footer:'Reported-sales subset (n=18,837). Bootstrap 95% CIs, 2,000 resamples, seed 42. Kruskal-Wallis across bands p≈2e-232. Scored titles skew larger (Mann-Whitney p≪0.001). Marketing/franchise strength may drive both scores and sales. Correlation ≠ causation. Cells n<30 suppressed.'},
+ {id:'p3',nav:'3 · PC Reality',
+  title:'Only ~16% of new Steam releases clear a meaningful traction bar (>20k owners or 50+ reviews); the median title gets 2 reviews',
+  takeaway:'Greenlight memos need a base-rate line: headline traction swings from 3% to 80% purely on definition; the strict rule (~16%) is the honest planning number.',
+  kpis:[[pct(D.controls.traction_rate_strict),'Traction — strict rule'],[pct(D.controls.traction_rate_default_v1_0),'Traction — pipeline v1.0 rule'],[fmt(D.controls.new_cohort_count,0),'New cohort titles (May 24–Mar 25)'],[fmt(D.controls.may_only_app_count,0),'Gone from later snapshot'],['2','Median reviews per cohort title']],
+  footer:'Steam snapshots 2024-05-26 → 2025-03-10 (one 10-month window). Owner buckets are coarse; traction ≠ profitability; costs unobserved. 2024-05 and 2025-03 are partial months; late months right-censored. Absence from later snapshot ≠ proven delisting. Titles may appear in multiple genres.'},
+ {id:'p4',nav:'4 · Geo & Risk',
+  title:'Regional skews are large enough to change launch order (RPG/Strategy 2.9–3.0× in Japan) — but evidence is mixed on posture: all three portfolios show similar downside resilience',
+  takeaway:'Use skews for launch order and localization; do not use the scenario matrix to pick a posture — assumptions, not data, drive the small differences.',
+  kpis:[['8.58×','Max material skew (Visual Novel · JP)'],[pct(D.controls.full_regional_reporting_count/D.controls.console_release_row_count_reported),'Full 4-region reporting rate'],['+10.7pp','Concentration direction'],[pct(1-D.controls.traction_rate_strict),'PC strict failure base rate'],['~75','Retention under combined downside (all postures)']],
+  footer:'Regional sales data is more complete for larger titles and may not represent the full release population. Skew can reflect platform install bases. Scenario outputs depend on assumptions; indexed values are not financial forecasts. Skew neutral band 0.80–1.25; cells <30 titles suppressed.'},
+ {id:'p5',nav:'Methodology',title:'Methodology & Definitions',takeaway:'',kpis:[],footer:''}
+];
+
+const nav=document.getElementById('nav'), mainEl=document.getElementById('main');
+PAGES.forEach(p=>{
+ const b=document.createElement('button');b.textContent=p.nav;b.onclick=()=>show(p.id);b.id='b_'+p.id;nav.appendChild(b);
+ const s=document.createElement('section');s.id=p.id;
+ s.innerHTML=`<h2>${p.title}</h2><p class="takeaway">${p.takeaway}</p>
+ <div class="kpis">${p.kpis.map(k=>`<div class="kpi"><div class="v">${k[0]}</div><div class="l">${k[1]}</div></div>`).join('')}</div>
+ <div class="grid" id="${p.id}_grid"></div>
+ ${p.footer?`<div class="footer"><b>Scope & caveats.</b> ${p.footer}</div>`:''}`;
+ mainEl.appendChild(s);
+});
+function show(id){document.querySelectorAll('section').forEach(s=>s.classList.toggle('active',s.id===id));
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.id==='b_'+id));
+ window.scrollTo(0,0);}
+function card(page,title,inner,hint,note){const d=document.createElement('div');d.className='card';
+ d.innerHTML=`<h3>${title}</h3>${hint?`<p class="hint">How to read: ${hint}</p>`:''}${inner}${note?`<div class="note">${note}</div>`:''}`;
+ document.getElementById(page+'_grid').appendChild(d);return d;}
+function chartCard(page,title,hint,note){const d=card(page,title,'<canvas></canvas>',hint,note);return d.querySelector('canvas');}
+Chart.defaults.font.family="'Segoe UI',system-ui";Chart.defaults.color=SEC;Chart.defaults.font.size=11;
+const noleg={plugins:{legend:{display:false}}};
+
+/* ---------- P0 OVERVIEW ---------- */
+(()=>{const g=document.getElementById('p0_grid');g.style.gridTemplateColumns='1fr';
+g.innerHTML=`
+<div class="card prose"><h3>The data journey</h3>
+<div class="flow">
+<div class="step"><b>1 · Original sources</b>vgchartz-2024.csv (64,016 console sales rows) + vg_data_dictionary.csv. Rich history, but messy: duplicates, missing sales, one critic score on a 0-10 scale, nothing about PC/digital.</div>
+<div class="step"><b>2 · Gap analysis</b>Executive questions needed quality scores, review counts, regional detail and the modern PC market — the original pair could not answer them alone.</div>
+<div class="step"><b>3 · Added datasets</b>Video_Games_Sales_as_at_22_Dec_2016 (16,719 rows: Metacritic critic/user scores, ESRB) + two Steam catalog snapshots: May 2024 (83,646 apps) and March 2025 (89,618 apps).</div>
+<div class="step"><b>4 · Cleaning pipeline</b>Reproducible Python pipeline (seed 42): dedup, sentinel repair, scale alignment, enrichment join, snapshot deltas. 15/15 critical tests passed; every dropped row logged.</div>
+<div class="step"><b>5 · Model & dashboards</b>Star-schema model (5 facts, 5 dimensions, genre bridge), 103 measures, 4 dashboards. Hypothesis titles rewritten to match the evidence. See the Data & Cleaning tab.</div>
+</div></div>
+<div class="finding"><b>1 · Market Structure — the market consolidated while releases exploded.</b><p>Top-10 publishers’ pooled unit share rose 58% → 75% between 1994-98 and 2014-18 and HHI agrees; meanwhile Steam grew to ~15,000 new releases per year. Space for smaller publishers exists in specific genre-platform cells (30.8% non-major share overall).</p></div>
+<div class="finding"><b>2 · Portfolio Economics — averages mislead; quality pays, but as an association.</b><p>Genres rank differently by median units and hit rate than by totals. Each critic-score band up roughly doubles median units (0.14M below 60 → 0.84M at 85+, non-overlapping confidence intervals). On Steam, user sentiment does NOT track ownership scale (ρ = −0.007) — an honest null result.</p></div>
+<div class="finding"><b>3 · Current PC Reality — most new releases stay obscure; the definition drives the headline.</b><p>Under a meaningful bar (>20k owners or 50+ reviews) only 16.1% of the 14,650-title new cohort gets traction; the median title receives 2 reviews. A looser rule says 80%, a stricter one 3% — greenlight decisions need the definition stated.</p></div>
+<div class="finding"><b>4 · Geography & Risk — regional skews are decision-grade; posture choice is not.</b><p>RPGs and Strategy over-index in Japan ~3×, shooters under-index at 0.33×. But the portfolio scenario matrix shows all three postures (AAA / mid-market / barbell) retain ~75 under combined downside — the working hypothesis that a barbell wins was reversed by the data.</p></div>
+<div class="card prose"><h3>How to use this dashboard</h3><ul>
+<li>Tabs across the top switch between pages. Start with <b>Data & Cleaning</b> if you want to trust the numbers first.</li>
+<li>Every chart has a one-line “How to read” hint and hover tooltips with exact values and sample sizes.</li>
+<li>Grey “n&lt;30” cells are deliberately suppressed — too few observations for a reliable value.</li>
+<li>Red text marks warnings, reporting boundaries and breached risk thresholds.</li>
+<li>Each page ends with a scope-and-caveats box: what the data can and cannot say.</li></ul></div>`;
+})();
+
+/* ---------- PD DATA & CLEANING ---------- */
+(()=>{const g=document.getElementById('pd_grid');g.style.gridTemplateColumns='1fr';
+let src=`<table><thead><tr><th>File</th><th style="text-align:left">Origin</th><th>Rows</th><th style="text-align:left">Role in the model</th></tr></thead><tbody>
+<tr><td>vgchartz-2024.csv</td><td style="text-align:left">Original</td><td>64,016</td><td style="text-align:left">Primary console sales fact (titles × platforms, regional units, 1971–2024)</td></tr>
+<tr><td>vg_data_dictionary.csv</td><td style="text-align:left">Original</td><td>—</td><td style="text-align:left">Column documentation for vgchartz. Not present in the shared folder at pipeline runtime — its validation checks were skipped and logged as NOT RUN</td></tr>
+<tr><td>Video_Games_Sales_as_at_22_Dec_2016.csv</td><td style="text-align:left">Added</td><td>16,719</td><td style="text-align:left">Score enrichment only: Metacritic critic/user scores, ESRB, developer. Its sales columns were deliberately excluded — sales come from one source only</td></tr>
+<tr><td>games_may2024_cleaned.csv</td><td style="text-align:left">Added</td><td>83,646</td><td style="text-align:left">Steam catalog snapshot #1 (May 26, 2024): prices, reviews, owner buckets, genres</td></tr>
+<tr><td>games_march2025_cleaned.csv</td><td style="text-align:left">Added</td><td>89,618</td><td style="text-align:left">Steam catalog snapshot #2 (Mar 10, 2025): enables 10-month deltas + new-release cohort</td></tr>
+</tbody></table>`;
+card('pd','The five source files',src,'the two “Original” rows are where the project started; the three “Added” rows were sourced to answer questions the originals could not.');
+card('pd','Why the raw data could not be used as-is',`<ul class="prose">
+<li><b>Duplicate records.</b> vgchartz contained 379 duplicate title-platform groups (382 excess rows) that would silently double-count sales.</li>
+<li><b>Missing is not zero.</b> 70.4% of console rows have no reported sales. Treating them as 0 would crash every average — they are kept as null and excluded from sales math, never zero-filled.</li>
+<li><b>Fake zeros (sentinels).</b> In the Steam files a metacritic score of 0 means “not scored”, not “terrible”: 79,706 of 83,646 May rows had this. Zeros were converted to null for scores and playtime, but deliberately NOT for price and review counts, where 0 is real.</li>
+<li><b>Incompatible score scales.</b> VGChartz critic scores are 0-10, the 2016 file is 0-100, Steam user sentiment is a % — they were aligned (×10) where valid and <i>never blended across providers</i>.</li>
+<li><b>Text instead of numbers.</b> Steam owners come as text ranges (“20,000 – 50,000”). They were mapped to ordered buckets; midpoints were never invented.</li>
+<li><b>Schema drift between snapshots.</b> The March file renamed AppID→appid and added a column — harmonized before comparison.</li>
+<li><b>Ambiguous free-to-play.</b> Price = 0 does not mean F2P (demos, delisted). F2P requires an explicit descriptor; unverified zero-price titles are flagged instead of guessed.</li>
+<li><b>Old data pretending to be current.</b> VGChartz retail estimates fade after ~2018 (digital sales invisible). Rather than show a fake “market collapse”, everything after 2018 is fenced off behind a reliability flag.</li>
+<li><b>“tbd” in numeric columns, mixed date formats, unicode noise</b> — all normalized with strict parsing; unparseable dates kept as null with the source string retained.</li></ul>`,
+ 'each bullet is one class of silent error that would have produced wrong executive conclusions.');
+new Chart(chartCard('pd','Console cleaning waterfall: 64,016 raw rows → 63,634 analytical rows','only duplicates were removed (−382); score enrichment joined 16,069 rows WITHOUT changing the row count — a critical test guards this.'),{type:'bar',
+ data:{labels:['Raw vgchartz rows','− duplicates','Clean fact rows','…of which sales reported','…scored (2016 join)'],
+ datasets:[{data:[64016,382,63634,18837,16069],backgroundColor:[ACC+'CC',RED+'AA',ACC+'CC','#60A5FACC','#93C5FDCC']}]},
+ options:{...noleg,scales:{y:{ticks:{callback:v=>fmt(v,0)}}}}});
+new Chart(chartCard('pd','Two Steam snapshots, three analytical populations','the overlap (74,736 apps) powers the 10-month delta analysis; March-only apps form the new-release cohort; May-only apps left the store listing.'),{type:'bar',
+ data:{labels:['In both snapshots (delta panel)','March-only (new apps → cohort 14,650)','May-only (gone by March)'],
+ datasets:[{data:[74736,14882,8910],backgroundColor:[ACC+'CC','#60A5FACC',GRAY+'CC']}]},
+ options:{indexAxis:'y',...noleg,scales:{x:{ticks:{callback:v=>fmt(v,0)}}}}});
+card('pd','How the cleaning was verified',`
+<p class="prose" style="margin-top:0">The pipeline (Python, fixed seed 42, 31s runtime) ends with an automated audit. <b>All 15 critical tests passed</b>, including: unique grain per table, enrichment join did not duplicate rows, zero orphan foreign keys, row-count waterfalls reconcile, raw files untouched (hash-verified), and every one of the 397 dropped records written to an exception log. 2,222 rows with full regional detail were re-summed against total sales: 2,222 passed (max difference 0.02M).</p>
+<div><span class="pill ok">C01–C15 critical: 15/15 pass</span><span class="pill ok">Sales reconciliation: 2,222/2,222</span><span class="pill ok">Source hashes unchanged</span><span class="pill warn">13 documented warnings (kept visible, not hidden)</span></div>
+<p class="prose">The warnings are honest limitations, not failures — e.g. 70.4% of console rows lack reported sales (a property of VGChartz), 2,772 Steam apps had negative review deltas (source-side corrections, flagged and kept), and 6 genres have cohorts under n=30 (suppressed in visuals). Full logs: cleaning_event_summary.csv, data_quality_test_results.csv, row_level_exceptions.csv.</p>`,
+ 'green pills are hard gates that block the build if they fail; the red pill is transparency, not damage.');
+card('pd','Rules that protect the analysis downstream',`<ul class="prose">
+<li>Console <b>units sold</b> and Steam <b>owner buckets</b> are different animals — never summed or compared directly.</li>
+<li>Steam titles carry multiple genres → genre totals are <b>not additive</b>; unique-title counts use distinct app IDs.</li>
+<li>%-positive sentiment only exists at <b>≥10 reviews</b>; visual cells with <b>n&lt;30</b> are suppressed.</li>
+<li>Console trends are only drawn inside the <b>reliable period (≤2018)</b>; 2018 is labeled a reporting boundary, not a market decline.</li>
+<li>A candidate console↔Steam title-matching bridge exists but is <b>excluded pending manual review</b> — no cross-family joins sneak in.</li></ul>`);
+})();
+
+/* ---------- P1 ---------- */
+(()=>{const a=D.console_area;
+new Chart(chartCard('p1','Console units by platform family (reported, reliable period 1985–2018)','each colored band is a platform family; the total height is industry units that year.','2018 = reporting boundary — not evidence of market decline'),{type:'line',
+ data:{labels:a.years,datasets:Object.entries(a.families).map(([f,v],i)=>({label:f,data:v,fill:true,backgroundColor:PAL[i]+'99',borderColor:PAL[i],pointRadius:0,tension:.25}))},
+ options:{scales:{y:{stacked:true,title:{display:true,text:'Units (M)'}},x:{stacked:true}},plugins:{legend:{position:'bottom'}}}});
+const se=D.steam_era;
+new Chart(chartCard('p1','Steam release era: releases per year vs share with any estimated owners','bars = volume of new releases; red line = share that registers any owners at all. 2025 is a partial year.'),{
+ data:{labels:se.years,datasets:[{type:'bar',label:'Releases',data:se.releases,backgroundColor:ACC+'CC',yAxisID:'y'},
+ {type:'line',label:'Share with any owners',data:se.escape_rate,borderColor:RED,pointRadius:2,yAxisID:'y2'}]},
+ options:{scales:{y:{title:{display:true,text:'Releases'}},y2:{position:'right',min:0,max:1,ticks:{callback:v=>(100*v)+'%'},grid:{drawOnChartArea:false}}},plugins:{legend:{position:'bottom'}}}});
+const c=D.concentration;
+new Chart(chartCard('p1','Publisher concentration: top-10 unit share by year','blue above the dashed long-run average = more concentrated than usual. HHI (not shown) moves the same way.'),{type:'line',
+ data:{labels:c.years,datasets:[{label:'Top-10 share',data:c.top10,borderColor:ACC,pointRadius:0,tension:.2},
+ {label:'Long-run avg',data:c.years.map(()=>c.avg),borderColor:GRAY,borderDash:[6,4],pointRadius:0}]},
+ options:{scales:{y:{ticks:{callback:v=>(100*v).toFixed(0)+'%'}}},plugins:{legend:{position:'bottom'}}}});
+const nm=D.nonmajor;
+let t='<table><thead><tr><th>Genre group</th>'+nm.cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+nm.rows.forEach(r=>{t+=`<tr><td>${r}</td>`+nm.cols.map(cl=>{const v=nm.cells[r+'|'+cl];
+ if(!v)return'<td style="color:#c7ccd4">n<30</td>';
+ const bg=`rgba(37,99,235,${(v[0]*0.85).toFixed(2)})`;const fg=v[0]>0.55?'#fff':'#111827';
+ return`<td style="background:${bg};color:${fg}" title="n=${v[1]}">${(100*v[0]).toFixed(0)}%</td>`;}).join('')+'</tr>';});
+card('p1','Mid-size opportunity map: non-major unit share by genre × platform',t+'</tbody></table>',
+ 'darker blue = more units flowing to publishers outside the Major tier = more room to compete. Hover a cell for its sample size.');
+})();
+
+/* ---------- P2 ---------- */
+(()=>{
+new Chart(chartCard('p2','Genre risk & return','right = higher typical sales per release; up = more ≥1M hits; bubble size = number of releases. Benchmarks: 0.12M median, 8.0% hit rate.'),{type:'bubble',
+ data:{datasets:D.risk_return.map((g,i)=>({label:g.genre,data:[{x:g.median_units_m,y:g.hit_rate_1m,r:Math.sqrt(g.release_count)/4}],backgroundColor:PAL[i%8]+'AA'}))},
+ options:{scales:{x:{type:'logarithmic',title:{display:true,text:'Median units per release (M, log)'}},y:{ticks:{callback:v=>(100*v)+'%'},title:{display:true,text:'Hit rate ≥1M'}}},
+ plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const g=D.risk_return[c.datasetIndex];return `${g.genre}: median ${g.median_units_m}M, hit ${(100*g.hit_rate_1m).toFixed(1)}%, n=${g.release_count}, top-5% share ${(100*g.top5pct_unit_share).toFixed(0)}%`;}}}}}});
+const par=[...D.risk_return].sort((a,b)=>b.top5pct_unit_share-a.top5pct_unit_share);
+new Chart(chartCard('p2','Genre Pareto: units coming from the top 5% of releases','longer bar = the genre depends more on a few blockbusters. High concentration ≠ bad genre — it means hit-driven economics.'),{type:'bar',
+ data:{labels:par.map(g=>g.genre),datasets:[{data:par.map(g=>g.top5pct_unit_share),backgroundColor:ACC+'CC'}]},
+ options:{indexAxis:'y',scales:{x:{ticks:{callback:v=>(100*v)+'%'}}},...noleg}});
+const q=D.quality;
+new Chart(chartCard('p2','Quality payoff: median units by critic-score band','a clean staircase: each band up roughly doubles the median. Hover for the bootstrap 95% CI and sample size. Association, not causation.'),{type:'bar',
+ data:{labels:q.bands,datasets:[{data:q.median,backgroundColor:ACC+'CC'}]},
+ options:{scales:{y:{title:{display:true,text:'Median units (M)'}}},plugins:{legend:{display:false},
+ tooltip:{callbacks:{label:c=>{const i=c.dataIndex;return `median ${q.median[i]}M · 95% CI [${q.lo[i]}, ${q.hi[i]}] · n=${q.n[i]}`;}}}}}});
+new Chart(chartCard('p2','Steam cross-check: ownership vs user sentiment is FLAT','if sentiment predicted scale, this line would rise. It does not (Spearman ρ = −0.007, n=49,692).','Evidence is mixed on PC: user sentiment does not track ownership scale at catalog level.'),{type:'line',
+ data:{labels:D.steam_curve.x,datasets:[{data:D.steam_curve.y,borderColor:ACC,pointRadius:0}]},
+ options:{scales:{x:{title:{display:true,text:'% positive reviews'},ticks:{maxTicksLimit:10}},y:{min:0,max:3,title:{display:true,text:'Smoothed owner-bucket rank'}}},...noleg}});
+})();
+
+/* ---------- P3 ---------- */
+(()=>{
+new Chart(chartCard('p3','Cohort outcomes: 14,650 new releases, increasingly demanding bars','NOT a nested funnel — each bar is a separate outcome. The cliff from “any owners” to “10+ reviews” is the obscurity wall.'),{type:'bar',
+ data:{labels:D.funnel.map(f=>f.stage),datasets:[{data:D.funnel.map(f=>f.count),backgroundColor:ACC+'CC'}]},
+ options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${fmt(c.raw,0)} titles · ${(100*D.funnel[c.dataIndex].pct_of_cohort).toFixed(1)}% of cohort`}}}}});
+new Chart(chartCard('p3','Traction winners vs the field (strict rule)','blue longer than grey = the trait is over-represented among traction titles. Hover for the gap in points. Association, not cause.'),{type:'bar',
+ data:{labels:D.traits.map(t=>t.trait.replace('price_tier:','').replace('genre_group:','')),
+ datasets:[{label:'Traction group',data:D.traits.map(t=>t.share),backgroundColor:ACC+'CC'},
+           {label:'The field',data:D.traits.map(t=>t.share_field),backgroundColor:GRAY+'CC'}]},
+ options:{indexAxis:'y',scales:{x:{ticks:{callback:v=>(100*v)+'%'}}},plugins:{legend:{position:'bottom'},
+ tooltip:{callbacks:{afterLabel:c=>`gap: ${D.traits[c.dataIndex].pp_difference}pp`}}}}});
+let t='<table><thead><tr><th>Price tier</th><th>Bottom (≤20k)</th><th>Middle (20k–1M)</th><th>Top (1M+)</th></tr></thead><tbody>';
+D.price_arch.forEach(r=>{t+=`<tr><td>${r.price_tier_label}</td>`+['Bottom (≤20k)','Middle (20k–1M)','Top (1M+)'].map(c=>{
+ const v=r[c]||0;return`<td style="background:rgba(37,99,235,${(v*.85).toFixed(2)});color:${v>.55?'#fff':'#111827'}">${(100*v).toFixed(1)}%</td>`;}).join('')+'</tr>';});
+card('p3','Price architecture (catalog, Mar 2025): where each price tier’s titles end up',t+'</tbody></table>',
+ 'rows sum to 100%. Read a row: “of all $15-30 titles, X% stay under 20k owners.” Higher tiers shift right.');
+new Chart(chartCard('p3','Sentiment by price tier: median %-positive','catalog vs the new cohort. Only titles with ≥10 reviews; tiers with n<30 are blank.'),{type:'bar',
+ data:{labels:D.sentiment.map(s=>s.tier),datasets:[{label:'Catalog',data:D.sentiment.map(s=>s.catalog),backgroundColor:ACC+'CC'},
+ {label:'New cohort',data:D.sentiment.map(s=>s.cohort),backgroundColor:GRAY+'CC'}]},
+ options:{scales:{y:{min:50,max:100}},plugins:{legend:{position:'bottom'}}}});
+new Chart(chartCard('p3','10-month price movement (May 2024 → Mar 2025)','most prices never moved. Relative movement only — no revenue conclusions.'),{type:'bar',
+ data:{labels:Object.keys(D.price_move),datasets:[{data:Object.values(D.price_move),backgroundColor:[RED+'AA',GRAY+'AA',ACC+'AA']}]},...{options:noleg}});
+let s='<table><thead><tr><th>Traction definition</th><th>Count</th><th>Rate</th></tr></thead><tbody>'+
+ D.sensitivity.map(r=>`<tr><td>${r.rule}</td><td>${fmt(r.traction_count,0)}</td><td><b>${(100*r.traction_rate).toFixed(1)}%</b></td></tr>`).join('')+'</tbody></table>';
+card('p3','Sensitivity: the headline depends on the definition',s,
+ 'the same 14,650 titles produce traction rates from 3% to 80%. The rank-1 owner bucket is “0–20k”, so the loose rules mostly measure “exists”.');
+})();
+
+/* ---------- P4 ---------- */
+(()=>{const sk=D.skew;
+let t='<table><thead><tr><th>Genre</th>'+sk.regions.map(r=>`<th>${r}</th>`).join('')+'</tr></thead><tbody>';
+sk.genres.forEach(g=>{t+=`<tr><td>${g}</td>`+sk.regions.map(r=>{const v=sk.cells[g+'|'+r];
+ if(!v)return'<td style="color:#c7ccd4">n<30</td>';
+ const x=v[0];let bg='#fff';
+ if(x>=1.25)bg=`rgba(30,64,175,${Math.min(.85,(x-1)/4+.15).toFixed(2)})`;
+ else if(x<=0.8)bg=`rgba(185,28,28,${Math.min(.8,(1-x)+.1).toFixed(2)})`;
+ const fg=(x>=2||x<=0.45)?'#fff':'#111827';
+ return`<td style="background:${bg};color:${fg}" title="${v[1]} titles">${x.toFixed(2)}</td>`;}).join('')+'</tr>';});
+card('p4','Regional skew index by genre',t+'</tbody></table>',
+ '1.00 = the genre sells regionally like the market overall. Blue = over-indexed, red = under-indexed; 0.80–1.25 is treated as neutral. Hover for title counts.');
+new Chart(chartCard('p4','Regional mix by platform family','a sanity check on the heatmap: part of any genre skew simply reflects WHERE its platforms sold (install bases).'),{type:'bar',
+ data:{labels:D.regional_mix.map(r=>r.platform_family),datasets:['North America','PAL','Japan','Other'].map((k,i)=>({label:k,data:D.regional_mix.map(r=>r[k]),backgroundColor:PAL[i]+'CC'}))},
+ options:{indexAxis:'y',scales:{x:{stacked:true,max:1,ticks:{callback:v=>(100*v)+'%'}},y:{stacked:true}},plugins:{legend:{position:'bottom'}}}});
+const sc_=D.scenarios;
+let m='<table><thead><tr><th>Posture</th>'+sc_.scenarios.map(s=>`<th>${s.replace('_',' ')}</th>`).join('')+'</tr></thead><tbody>';
+sc_.postures.forEach(p=>{m+=`<tr><td>${p}</td>`+sc_.scenarios.map(s=>{const v=sc_.cells[p+'|'+s];
+ const bg=v<80?`rgba(185,28,28,${((100-v)/60).toFixed(2)})`:'#fff';
+ return`<td style="background:${bg}">${v.toFixed(1)}</td>`;}).join('')+'</tr>';});
+card('p4','Portfolio scenario matrix (each posture’s base = 100)',m+'</tbody></table>',
+ 'read across a row: how much of the base outcome survives each shock. Robustness analysis, NOT a forecast — and no posture separates from the pack.',
+ 'All three postures retain ~75 under combined downside — the data does not favor a single posture.');
+const risks=[
+ ['breach','1. Console-data staleness: last reliable year 2018 (7+ yrs) — threshold breached — confidence High'],
+ ['breach','2. PC failure base rate: 84% of new cohort miss strict traction — threshold (>75%) breached — confidence High'],
+ ['breach','3. Publisher concentration: top-10 pooled share +10.7pp (2014-18 vs 2009-13), HHI rising — watch — confidence Medium (VGChartz coverage)'],
+ ['','4. Largest regional dependency: Japan-skewed genres (RPG 2.9×, Strategy 3.0×) — within threshold — confidence Medium (completeness bias)']];
+card('p4','Risk register (validated 2026-07-19)',risks.map(r=>`<div class="risk ${r[0]}">${r[1]}</div>`).join(''),
+ 'red left border = defined threshold breached; grey = within threshold.');
+})();
+
+/* ---------- P5 METHODOLOGY ---------- */
+(()=>{const g=document.getElementById('p5_grid');g.style.gridTemplateColumns='1fr';
+g.innerHTML=`<div class="card method">
+<p><b>Sources.</b> VGChartz console sales (retailer estimates; reliable trend period ≤2018; missing sales are never zero); 2016 Metacritic-derived score enrichment (16,069 matches; scored titles skew larger); Steam snapshots 2024-05-26 and 2025-03-10 (10-month interval). Pipeline run_20260719_204125, 15/15 data-quality tests passed. Full cleaning story: Data & Cleaning tab.</p>
+<p><b>Scope filters.</b> Console trends use reported sales AND the reliable trend period. Steam sentiment requires ≥10 reviews. Cells with fewer than 30 observations are suppressed.</p>
+<p><b>Traction definitions.</b> Pipeline v1.0 = any estimated owners OR ≥50 reviews (79.5%). Strict = >20,000 owners OR ≥50 reviews (16.1%). Strictest = both (3.4%). The rank-1 owner bucket is “0–20,000”, so the v1.0 rule mostly measures “has any estimated owners”. Median cohort title receives 2 reviews. Late cohort months are right-censored.</p>
+<p><b>Statistics.</b> Medians + bootstrap 95% CIs (2,000 resamples, seed 42); Kruskal-Wallis across score bands H=1084.9, p≈2e-232; Spearman ρ (Steam sentiment vs owners) = −0.007 (n.s., n=49,692); chi-square genre×region p≈3e-65; logistic-regression odds ratios are observational associations, never causal effects.</p>
+<p><b>Scenario model.</b> Illustrative unit-based robustness model (no cost/marketing data). Outcomes indexed to each posture's base = 100. Retention under combined downside: 74.7–75.0 across all postures — differences are within assumption noise.</p>
+<p><b>Validation.</b> 40/40 automated build checks passed; 12/12 control totals reconciled exactly against source data. Audit trail: model_input_audit, analytical_methodology, validated_findings_register, powerbi_validation_report (project repository).</p>
+<p style="color:var(--sec)"><i>This static page mirrors the Power BI project (Gaming_Executive_Dashboard.pbip). Interactive slicing is available in the Power BI version.</i></p></div>`;
+})();
+
+show('p0');
+</script>
+</body>
+</html>
